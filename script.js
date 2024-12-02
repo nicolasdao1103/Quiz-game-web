@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () =>{
     function fetchQuestions(amount, category, difficulty){
         let url = `https://opentdb.com/api.php?amount=${amount}`;
         if (category) url += `&category=${category}`;
-        if (difficulty) url += `&diffiulty=${difficulty}`;
+        if (difficulty) url += `&difficulty=${difficulty}`;
         url += `&type=multiple`;
 
         fetch(url).then(response => response.json()).then(data =>{
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () =>{
         if(score > highScore){
             highScore = score
             localStorage.setItem('HighScoreTrivia', highScore.toString());
-            updateHighScoreDisplay();
+            updateHighScoreDisplay(); 
         }
     }
 
