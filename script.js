@@ -11,14 +11,17 @@ document.addEventListener('DOMContentLoaded', () =>{
     const amountInput = document.getElementById('amount');   
     const difficultySelect = document.getElementById('difficulty');   
     const startButton = document.getElementById('start-btn'); 
+    const timerContainer = document.getElementById('timer');
     
     let currentQuestions = [];
     let score = 0;
     let questionIndex = 0;
     let highScore = parseInt(localStorage.getItem('HighScoreTrivia')) || 0;
     let questionStartTime;
+    let timerInterval;
     const baseScorePerQuestion = 1000;
     const penaltyPerSecond = 10;
+    const defaultTime = 100;
 
     highScoreDisplay.innerText = `High Score: ${highScore}`;
 
@@ -57,11 +60,15 @@ document.addEventListener('DOMContentLoaded', () =>{
     }
 
     function displayQuestion(){
+        clearInterval(timerInterval);
+        timerContainer.innerText = '';
+
         if(questionIndex < currentQuestions.length){
             let currentQuestion = currentQuestions[questionIndex];
             questionContainer.innerHTML = decodeHTML(currentQuestion.question);
             displayAnswers(currentQuestion);
             updateProgress();
+            startTimer();
             questionStartTime = Date.now();
         }else{
             updateHighScore();
@@ -84,6 +91,8 @@ document.addEventListener('DOMContentLoaded', () =>{
     }
 
     function selectAnswer(selectedButton, correctAnswer, answers){
+        clearInterval(timerInterval);
+
         const timeTaken = (Date.now() - questionStartTime) / 1000;
         let scoreForThisQuestion = Math.max(baseScorePerQuestion - Math.floor(timeTaken) * penaltyPerSecond, 0);
 
@@ -114,6 +123,40 @@ document.addEventListener('DOMContentLoaded', () =>{
 
     }
 
+    function startTimer(){
+        let timeRemaining = defaultTime;
+        timerContainer.innerText = `Time left: ${timeRemaining}s`
+
+        timerInterval = setInterval(() => {
+            timeRemaining--;
+            timerContainer.innerText = `Time left: ${timeRemaining}s`
+
+            if (timeRemaining <=0){
+                clearInterval(timerInterval);
+                autoSelectWrongAnswer();
+            }
+        }, 1000);
+    }
+
+    function autoSelectWrongAnswer(){
+        const correctAnswer = currentQuestions[questionIndex].correct_answer;
+        const buttons = answersContainer.getElementsByClassName('answer-btn');
+        for (let button of buttons){
+            if(decodeHTML(button.innerHTML) === decodeHTML(correctAnswer)){
+                button.classList.add('correct');
+            } else {
+                button.classList.add('incorrect');
+            }
+            button.disabled = true;
+        }
+
+        resultContainer.innerText = `Time is up! The correct answer was: ${decodeHTML(correctAnswer)}`;
+        setTimeout(() => {
+            questionIndex++;
+            displayQuestion();
+        }, 3000);
+    }
+
     function updateCurrentScore(){
         currentScoreDisplay.innerText = `Current Score: ${score}`;
     }
@@ -126,6 +169,7 @@ document.addEventListener('DOMContentLoaded', () =>{
     }
 
     function showResults(){
+        clearInterval(timerInterval);
         questionContainer.innerText = 'Quiz Finished!';
         answersContainer.innerHTML = '';
         resultContainer.innerText = `Your final score is: ${score}`;
